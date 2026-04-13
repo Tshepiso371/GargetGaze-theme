@@ -1,0 +1,187 @@
+{% assign discount = 0 %}
+
+<section style="padding:40px; font-family:sans-serif;">
+
+  <!-- BADGES -->
+  <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+
+    {% if product.compare_at_price > product.price %}
+      {% assign discount = product.compare_at_price | minus: product.price | times: 100 | divided_by: product.compare_at_price | round %}
+      <span style="background:red;color:white;padding:6px 12px;border-radius:6px;">
+        SALE - Save {{ discount }}%
+      </span>
+    {% endif %}
+
+    {% if product.tags contains 'new-arrival' %}
+      <span style="background:blue;color:white;padding:6px 12px;border-radius:6px;">
+        New Arrival
+      </span>
+    {% endif %}
+
+    {% if product.tags contains 'best-seller' %}
+      <span style="background:green;color:white;padding:6px 12px;border-radius:6px;">
+        Best Seller
+      </span>
+    {% endif %}
+
+    {% unless product.available %}
+      <span style="background:gray;color:white;padding:6px 12px;border-radius:6px;">
+        Sold Out
+      </span>
+    {% endunless %}
+
+  </div>
+
+  <!-- HEADER -->
+  <h1 style="font-size:28px; font-weight:800;">{{ product.title }}</h1>
+
+  <p><strong>Brand:</strong> {{ product.vendor | upcase }}</p>
+  <p><strong>Type:</strong> {{ product.type }}</p>
+
+  <p style="font-size:20px; margin-top:10px;">
+    <strong>Price:</strong> {{ product.price | money }}
+    {% if product.compare_at_price > product.price %}
+      <span style="text-decoration:line-through; color:gray; margin-left:10px;">
+        {{ product.compare_at_price | money }}
+      </span>
+    {% endif %}
+  </p>
+
+  <p style="color:gray;">
+    Added on: {{ product.created_at | date: "%B %d, %Y" }}
+  </p>
+
+  <!-- MAIN IMAGE -->
+  <img 
+  src="{{ product.featured_image | image_url: width: 600 }}" 
+  width="600" 
+  height="400"
+  style="max-width:350px; width:100%; height:auto; border-radius:12px;"
+>
+  <!-- DESCRIPTION -->
+  <div style="margin-top:25px;">
+    <h3>Preview</h3>
+    <p>{{ product.description | strip_html | truncate: 120 }}</p>
+
+    <h3>Full Description</h3>
+    <p>{{ product.description }}</p>
+  </div>
+
+  <!-- SPECIFICATIONS -->
+  {% if section.settings.show_specs %}
+    <div style="margin-top:30px;">
+      <h2>{{ section.settings.specs_heading }}</h2>
+
+      <table border="1" cellpadding="10" style="border-collapse:collapse; width:100%; margin-top:10px;">
+        {% for tag in product.tags %}
+          {% if tag contains 'spec:' %}
+            {% assign parts = tag | split: ':' %}
+            {% if parts.size >= 3 %}
+              <tr>
+                <td><strong>{{ parts[1] }}</strong></td>
+                <td>{{ parts[2] }}</td>
+              </tr>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </table>
+    </div>
+  {% endif %}
+
+  <!-- VARIANT SELECTOR -->
+  <div style="margin-top:30px;">
+    {% form 'product', product %}
+
+      {% for option in product.options_with_values %}
+        <div style="margin-bottom:10px;">
+          <label><strong>{{ option.name }}</strong></label><br>
+          <select>
+            {% for value in option.values %}
+              <option>{{ value }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endfor %}
+
+      <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+
+      <button type="submit" style="padding:10px 20px; background:#ec4899; color:white; border:none; border-radius:6px;">
+        {% if product.available %}
+          Add to Cart — {{ product.selected_or_first_available_variant.price | money }}
+        {% else %}
+          Sold Out
+        {% endif %}
+      </button>
+
+    {% endform %}
+  </div>
+
+  <!-- VARIANT TABLE -->
+  <div style="margin-top:30px;">
+    <h3>{{ product.variants | size }} configurations available</h3>
+
+    <table border="1" cellpadding="10" style="border-collapse:collapse; width:100%;">
+      <tr>
+        <th>Variant</th>
+        <th>SKU</th>
+        <th>Price</th>
+        <th>Status</th>
+      </tr>
+
+      {% for variant in product.variants %}
+        <tr>
+          <td>{{ variant.title }}</td>
+          <td>{{ variant.sku | default: 'N/A' }}</td>
+          <td>{{ variant.price | money }}</td>
+          <td>
+            {% if variant.available %}
+              In Stock
+            {% else %}
+              Sold Out
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- IMAGE GALLERY -->
+  <div style="margin-top:30px;">
+    <h3>Gallery</h3>
+
+    {% for image in product.images %}
+      <img 
+  src="{{ image | image_url: width: 400 }}" 
+  width="400" 
+  height="400"
+  style="max-width:120px; width:100%; height:auto; border-radius:8px;"
+>
+    {% endfor %}
+  </div>
+
+</section>
+
+{% schema %}
+{
+  "name": "Product Gadgets",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_specs",
+      "label": "Show specifications table",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "specs_heading",
+      "label": "Specs section heading",
+      "default": "Technical Specifications"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Gadgets"
+    }
+  ]
+}
+{% endschema %}
