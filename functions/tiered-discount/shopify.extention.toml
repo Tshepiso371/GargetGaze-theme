@@ -1,0 +1,10 @@
+name = "tiered-discount"
+type = "function"
+
+[build]
+command = ""
+path = "dist/index.js"
+
+[ui.paths]
+create = "/"
+details = "/"
